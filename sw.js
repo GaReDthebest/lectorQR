@@ -1,19 +1,35 @@
-self.addEventListener('install', event => {
+const CACHE_NAME = "qr-reader-cache-v1";
+const urlsToCache = [
+    "/",
+    "/index.html",
+    "/script.js",
+    "/manifest.json",
+    "/icons/icon-192x192.png",
+    "/icons/icon-512x512.png"
+];
+
+self.addEventListener("install", event => {
     event.waitUntil(
-        caches.open('qr-reader-cache').then(cache => {
-            return cache.addAll([
-                '/',
-                '/index.html',
-                '/script.js'
-            ]);
+        caches.open(CACHE_NAME).then(cache => {
+            return cache.addAll(urlsToCache);
         })
     );
 });
 
-self.addEventListener('fetch', event => {
+self.addEventListener("fetch", event => {
     event.respondWith(
         caches.match(event.request).then(response => {
             return response || fetch(event.request);
+        })
+    );
+});
+
+self.addEventListener("activate", event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.filter(cache => cache !== CACHE_NAME).map(cache => caches.delete(cache))
+            );
         })
     );
 });
